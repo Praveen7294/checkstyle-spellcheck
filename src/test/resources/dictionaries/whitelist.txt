@@ -1,0 +1,6 @@
+# Sample test whitelist with hash comment
+// Sample test whitelist with double-slash comment
+
+  DTO
+dao
+uuid
