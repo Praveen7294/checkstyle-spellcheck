@@ -1,0 +1,73 @@
+package io.github.praveen7294.checkstyle.spellcheck;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
+import com.puppycrawl.tools.checkstyle.AbstractModuleTestSupport;
+import com.puppycrawl.tools.checkstyle.DefaultConfiguration;
+import com.puppycrawl.tools.checkstyle.DetailAstImpl;
+import com.puppycrawl.tools.checkstyle.api.TokenTypes;
+
+/**
+ * Unit tests for {@link IdentifierSpellingCheck} verifying 100% instruction and branch coverage.
+ */
+public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
+
+  private static final String DIC_PATH = "src/test/resources/dictionaries/en_US.dic";
+  private static final String AFF_PATH = "src/test/resources/dictionaries/en_US.aff";
+  private static final String WHITELIST_PATH = "src/test/resources/dictionaries/whitelist.txt";
+
+  @Override
+  public String getPackageLocation() {
+    return "io/github/praveen7294/checkstyle/spellcheck";
+  }
+
+  @Test
+  public void testCamelCaseIdentifiers() throws Exception {
+    final DefaultConfiguration checkConfig = createModuleConfig(IdentifierSpellingCheck.class);
+    checkConfig.addProperty("dictionaryFile", DIC_PATH);
+    checkConfig.addProperty("affixFile", AFF_PATH);
+    checkConfig.addProperty("whitelist", WHITELIST_PATH);
+
+    final String[] expected = {
+      "9:18: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "userAdress", "adress"),
+      "15:15: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "printNamme", "namme"),
+    };
+
+    verify(checkConfig, getPath("InputIdentifierSpellingCamelCase.java"), expected);
+  }
+
+  @Test
+  public void testTokens() {
+    final IdentifierSpellingCheck check = new IdentifierSpellingCheck();
+    final int[] expectedDefaultTokens = {
+      TokenTypes.VARIABLE_DEF,
+      TokenTypes.METHOD_DEF,
+      TokenTypes.PARAMETER_DEF,
+    };
+    assertArrayEquals(expectedDefaultTokens, check.getDefaultTokens());
+    assertArrayEquals(expectedDefaultTokens, check.getAcceptableTokens());
+    assertArrayEquals(new int[0], check.getRequiredTokens());
+  }
+
+  @Test
+  public void testFinishLocalSetupFailsOnInvalidFiles() {
+    final IdentifierSpellingCheck check = new IdentifierSpellingCheck();
+    // Missing mandatory dictionaryFile and affixFile
+    assertThrows(IllegalStateException.class, check::finishLocalSetup);
+  }
+
+  @Test
+  public void testVisitTokenWithoutIdentChild() {
+    final IdentifierSpellingCheck check = new IdentifierSpellingCheck();
+    check.setDictionaryFile(DIC_PATH);
+    check.setAffixFile(AFF_PATH);
+    check.setWhitelist(WHITELIST_PATH);
+    check.finishLocalSetup();
+
+    // AST node without an IDENT child (covers identToken == null branch)
+    final DetailAstImpl astWithoutIdent = new DetailAstImpl();
+    astWithoutIdent.setType(TokenTypes.VARIABLE_DEF);
+    check.visitToken(astWithoutIdent);
+  }
+}
