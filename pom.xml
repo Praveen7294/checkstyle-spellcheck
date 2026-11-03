@@ -40,6 +40,7 @@
     <pmd.plugin.version>3.26.0</pmd.plugin.version>
     <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
     <jxr.plugin.version>3.6.0</jxr.plugin.version>
+    <truth.version>1.4.4</truth.version>
   </properties>
 
   <dependencies>
@@ -72,6 +73,14 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Google Truth (required by Checkstyle's AbstractModuleTestSupport) -->
+    <dependency>
+      <groupId>com.google.truth</groupId>
+      <artifactId>truth</artifactId>
+      <version>${truth.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -152,6 +161,7 @@
         <configuration>
           <effort>Max</effort>
           <threshold>Low</threshold>
+          <excludeFilterFile>config/spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
         <executions>
           <execution>

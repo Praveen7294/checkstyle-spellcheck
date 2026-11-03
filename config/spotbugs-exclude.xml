@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <Match>
+    <!-- spellChecker is initialized by finishLocalSetup() during the Checkstyle lifecycle -->
+    <Class name="io.github.praveen7294.checkstyle.spellcheck.IdentifierSpellingCheck"/>
+    <Field name="spellChecker"/>
+    <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+  </Match>
+</FindBugsFilter>
