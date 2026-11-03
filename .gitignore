@@ -33,3 +33,6 @@ bin/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Temporary documentation ignore (to be uploaded after implementation)
+docs/

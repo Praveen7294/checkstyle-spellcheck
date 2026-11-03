@@ -11,17 +11,35 @@
 
   <name>Checkstyle Spellcheck Extension</name>
   <description>Checkstyle extension check for spellchecking Java identifiers using Hunspell</description>
+  <url>https://github.com/Praveen7294/checkstyle-spellcheck</url>
+  <inceptionYear>2026</inceptionYear>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:git@github.com:Praveen7294/checkstyle-spellcheck.git</connection>
+    <developerConnection>scm:git:git@github.com:Praveen7294/checkstyle-spellcheck.git</developerConnection>
+    <url>https://github.com/Praveen7294/checkstyle-spellcheck</url>
+  </scm>
+  <issueManagement>
+    <system>GitHub Issues</system>
+    <url>https://github.com/Praveen7294/checkstyle-spellcheck/issues</url>
+  </issueManagement>
 
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <checkstyle.version>14.3.0</checkstyle.version>
+    <checkstyle.version>14.4.0</checkstyle.version>
     <lucene.version>10.1.0</lucene.version>
     <junit.version>5.11.4</junit.version>
     <jacoco.plugin.version>0.8.12</jacoco.plugin.version>
     <spotbugs.plugin.version>4.9.2.0</spotbugs.plugin.version>
     <pmd.plugin.version>3.26.0</pmd.plugin.version>
     <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
+    <jxr.plugin.version>3.6.0</jxr.plugin.version>
   </properties>
 
   <dependencies>
@@ -106,10 +124,17 @@
                 <rule>
                   <element>BUNDLE</element>
                   <limits>
+                    <!-- 100% Instruction Coverage -->
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.80</minimum>
+                      <minimum>1.00</minimum>
+                    </limit>
+                    <!-- 100% Branch Coverage -->
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>1.00</minimum>
                     </limit>
                   </limits>
                 </rule>
@@ -138,7 +163,23 @@
         </executions>
       </plugin>
 
-      <!-- 3. PMD Source Code Analysis -->
+      <!-- 3. HTML Source Cross-Reference (for PMD and report browsing) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+        <version>${jxr.plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>jxr</goal>
+              <goal>test-jxr</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- 4. PMD Source Code Analysis -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
@@ -158,7 +199,7 @@
         </executions>
       </plugin>
 
-      <!-- 4. Checkstyle Self-Check (Google style) -->
+      <!-- 5. Checkstyle Self-Check (Google style) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -171,7 +212,7 @@
           </dependency>
         </dependencies>
         <configuration>
-          <configLocation>google_checks.xml</configLocation>
+          <configLocation>config/checkstyle.xml</configLocation>
           <consoleOutput>true</consoleOutput>
           <failsOnError>true</failsOnError>
           <failOnViolation>true</failOnViolation>
