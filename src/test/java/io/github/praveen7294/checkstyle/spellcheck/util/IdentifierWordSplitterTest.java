@@ -63,4 +63,14 @@ public class IdentifierWordSplitterTest {
     assertThrows(UnsupportedOperationException.class, () ->
       result.add("extraWord"));
   }
+
+  @Test
+  public void testPascalCaseIdentifiers() {
+    assertEquals(List.of("abstract", "check"),
+      IdentifierWordSplitter.split("AbstractCheck"));
+    assertEquals(List.of("user", "account", "service"),
+      IdentifierWordSplitter.split("UserAccountService"));
+    assertEquals(List.of("line", "number"),
+      IdentifierWordSplitter.split("LineNumber"));
+  }
 }
