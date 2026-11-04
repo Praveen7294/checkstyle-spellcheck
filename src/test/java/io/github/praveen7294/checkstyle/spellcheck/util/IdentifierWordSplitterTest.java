@@ -91,4 +91,17 @@ public class IdentifierWordSplitterTest {
     assertEquals(List.of("user", "dto"), IdentifierWordSplitter.split("UserDTO"));
     assertEquals(List.of("html"), IdentifierWordSplitter.split("HTML"));
   }
+
+  @Test
+  public void testIdentifiersWithDigits() {
+    assertEquals(List.of("version", "number"), IdentifierWordSplitter.split("version2Number"));
+    assertEquals(List.of("sha", "hash"), IdentifierWordSplitter.split("sha256Hash"));
+    assertEquals(List.of("user", "address"), IdentifierWordSplitter.split("user1Address"));
+    assertEquals(List.of("param"), IdentifierWordSplitter.split("param1"));
+    assertEquals(List.of("arg"), IdentifierWordSplitter.split("arg0"));
+    assertEquals(List.of("max", "retry", "count"), IdentifierWordSplitter.split("MAX_RETRY_3_COUNT"));
+    assertEquals(List.of("base", "encoded"), IdentifierWordSplitter.split("base64Encoded"));
+    assertTrue(IdentifierWordSplitter.split("123").isEmpty());
+    assertTrue(IdentifierWordSplitter.split("_123_").isEmpty());
+  }
 }

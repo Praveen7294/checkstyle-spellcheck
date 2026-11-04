@@ -6,3 +6,5 @@ dao
 uuid
 enum
 json
+sha
+param
