@@ -108,4 +108,20 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
 
     verify(checkConfig, getPath("InputIdentifierSpellingConstantAndEnum.java"), expected);
   }
+
+  @Test
+  public void testAcronymIdentifiers() throws Exception {
+    final DefaultConfiguration checkConfig = createModuleConfig(IdentifierSpellingCheck.class);
+    checkConfig.addProperty("dictionaryFile", DIC_PATH);
+    checkConfig.addProperty("affixFile", AFF_PATH);
+    checkConfig.addProperty("whitelist", WHITELIST_PATH);
+
+    final String[] expected = {
+      "24:9: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "HTPPServer", "htpp"),
+      "27:9: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "HTTPServver", "servver"),
+      "30:15: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "parseJSONResponsse", "responsse"),
+    };
+
+    verify(checkConfig, getPath("InputIdentifierSpellingAcronyms.java"), expected);
+  }
 }

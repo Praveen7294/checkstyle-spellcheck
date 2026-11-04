@@ -17,10 +17,8 @@ public class IdentifierWordSplitterTest {
 
   @Test
   public void testHasPrivateConstructor() throws Exception {
-    final Constructor<IdentifierWordSplitter> constructor =
-      IdentifierWordSplitter.class.getDeclaredConstructor();
-    assertTrue(Modifier.isPrivate(constructor.getModifiers()),
-      "Constructor should be private");
+    final Constructor<IdentifierWordSplitter> constructor = IdentifierWordSplitter.class.getDeclaredConstructor();
+    assertTrue(Modifier.isPrivate(constructor.getModifiers()), "Constructor should be private");
     constructor.setAccessible(true);
     constructor.newInstance();
   }
@@ -39,22 +37,16 @@ public class IdentifierWordSplitterTest {
 
   @Test
   public void testSingleWord() {
-    assertEquals(List.of("user"),
-      IdentifierWordSplitter.split("user"));
-    assertEquals(List.of("name"),
-      IdentifierWordSplitter.split("name"));
+    assertEquals(List.of("user"), IdentifierWordSplitter.split("user"));
+    assertEquals(List.of("name"), IdentifierWordSplitter.split("name"));
   }
 
   @Test
   public void testCamelCaseIdentifiers() {
-    assertEquals(List.of("user", "name"),
-      IdentifierWordSplitter.split("userName"));
-    assertEquals(List.of("get", "line", "number"),
-      IdentifierWordSplitter.split("getLineNumber"));
-    assertEquals(List.of("file", "lines"),
-      IdentifierWordSplitter.split("fileLines"));
-    assertEquals(List.of("column", "number"),
-      IdentifierWordSplitter.split("columnNumber"));
+    assertEquals(List.of("user", "name"), IdentifierWordSplitter.split("userName"));
+    assertEquals(List.of("get", "line", "number"), IdentifierWordSplitter.split("getLineNumber"));
+    assertEquals(List.of("file", "lines"), IdentifierWordSplitter.split("fileLines"));
+    assertEquals(List.of("column", "number"), IdentifierWordSplitter.split("columnNumber"));
   }
 
   @Test
@@ -66,37 +58,37 @@ public class IdentifierWordSplitterTest {
 
   @Test
   public void testPascalCaseIdentifiers() {
-    assertEquals(List.of("abstract", "check"),
-      IdentifierWordSplitter.split("AbstractCheck"));
-    assertEquals(List.of("user", "account", "service"),
-      IdentifierWordSplitter.split("UserAccountService"));
-    assertEquals(List.of("line", "number"),
-      IdentifierWordSplitter.split("LineNumber"));
+    assertEquals(List.of("abstract", "check"), IdentifierWordSplitter.split("AbstractCheck"));
+    assertEquals(List.of("user", "account", "service"), IdentifierWordSplitter.split("UserAccountService"));
+    assertEquals(List.of("line", "number"), IdentifierWordSplitter.split("LineNumber"));
   }
 
   @Test
   public void testUpperSnakeCaseIdentifiers() {
-    assertEquals(List.of("max", "buffer", "size"),
-      IdentifierWordSplitter.split("MAX_BUFFER_SIZE"));
-    assertEquals(List.of("default", "timeout"),
-      IdentifierWordSplitter.split("DEFAULT_TIMEOUT"));
-    assertEquals(List.of("timeout"),
-      IdentifierWordSplitter.split("TIMEOUT"));
-    assertEquals(List.of("internal", "id"),
-      IdentifierWordSplitter.split("_INTERNAL_ID_"));
-    assertEquals(List.of("key"),
-      IdentifierWordSplitter.split("__KEY__"));
+    assertEquals(List.of("max", "buffer", "size"), IdentifierWordSplitter.split("MAX_BUFFER_SIZE"));
+    assertEquals(List.of("default", "timeout"), IdentifierWordSplitter.split("DEFAULT_TIMEOUT"));
+    assertEquals(List.of("timeout"), IdentifierWordSplitter.split("TIMEOUT"));
+    assertEquals(List.of("internal", "id"), IdentifierWordSplitter.split("_INTERNAL_ID_"));
+    assertEquals(List.of("key"), IdentifierWordSplitter.split("__KEY__"));
     assertTrue(IdentifierWordSplitter.split("_").isEmpty());
     assertTrue(IdentifierWordSplitter.split("___").isEmpty());
   }
 
   @Test
   public void testMixedSnakeAndCamelCase() {
-    assertEquals(List.of("user", "name"),
-      IdentifierWordSplitter.split("user_name"));
-    assertEquals(List.of("user", "account", "name"),
-      IdentifierWordSplitter.split("user_accountName"));
-    assertEquals(List.of("default", "user", "timeout"),
-      IdentifierWordSplitter.split("DEFAULT_userTimeout"));
+    assertEquals(List.of("user", "name"), IdentifierWordSplitter.split("user_name"));
+    assertEquals(List.of("user", "account", "name"), IdentifierWordSplitter.split("user_accountName"));
+    assertEquals(List.of("default", "user", "timeout"), IdentifierWordSplitter.split("DEFAULT_userTimeout"));
+  }
+
+  @Test
+  public void testAcronymIdentifiers() {
+    assertEquals(List.of("http", "server"), IdentifierWordSplitter.split("HTTPServer"));
+    assertEquals(List.of("parse", "json", "response"), IdentifierWordSplitter.split("parseJSONResponse"));
+    assertEquals(List.of("url", "class", "loader"), IdentifierWordSplitter.split("URLClassLoader"));
+    assertEquals(List.of("io", "error"), IdentifierWordSplitter.split("IOError"));
+    assertEquals(List.of("get", "user", "id"), IdentifierWordSplitter.split("getUserID"));
+    assertEquals(List.of("user", "dto"), IdentifierWordSplitter.split("UserDTO"));
+    assertEquals(List.of("html"), IdentifierWordSplitter.split("HTML"));
   }
 }

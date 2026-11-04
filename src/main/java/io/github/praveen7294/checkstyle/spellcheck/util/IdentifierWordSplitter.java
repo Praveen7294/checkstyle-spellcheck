@@ -22,6 +22,12 @@ public final class IdentifierWordSplitter {
       Pattern.compile("(?<=[a-z])(?=[A-Z])");
 
   /**
+   * Pattern to split acronym boundaries (uppercase letter followed by uppercase then lowercase).
+   */
+  private static final Pattern ACRONYM_PATTERN =
+      Pattern.compile("(?<=[A-Z])(?=[A-Z][a-z])");
+
+  /**
    * Private constructor to prevent instantiation of utility class.
    */
   private IdentifierWordSplitter() {
@@ -41,6 +47,7 @@ public final class IdentifierWordSplitter {
     return SNAKE_CASE_PATTERN.splitAsStream(identifier)
       .filter(Predicate.not(String::isEmpty))
       .flatMap(CAMEL_CASE_PATTERN::splitAsStream)
+      .flatMap(ACRONYM_PATTERN::splitAsStream)
       .map(word -> word.toLowerCase(Locale.ROOT))
       .toList();
   }
