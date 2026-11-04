@@ -41,6 +41,9 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
   public void testTokens() {
     final IdentifierSpellingCheck check = new IdentifierSpellingCheck();
     final int[] expectedDefaultTokens = {
+      TokenTypes.CLASS_DEF,
+      TokenTypes.INTERFACE_DEF,
+      TokenTypes.RECORD_DEF,
       TokenTypes.VARIABLE_DEF,
       TokenTypes.METHOD_DEF,
       TokenTypes.PARAMETER_DEF,
@@ -69,5 +72,21 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
     final DetailAstImpl astWithoutIdent = new DetailAstImpl();
     astWithoutIdent.setType(TokenTypes.VARIABLE_DEF);
     check.visitToken(astWithoutIdent);
+  }
+
+  @Test
+  public void testPascalCaseIdentifiers() throws Exception {
+    final DefaultConfiguration checkConfig = createModuleConfig(IdentifierSpellingCheck.class);
+    checkConfig.addProperty("dictionaryFile", DIC_PATH);
+    checkConfig.addProperty("affixFile", AFF_PATH);
+    checkConfig.addProperty("whitelist", WHITELIST_PATH);
+
+    final String[] expected = {
+      "19:9: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "UserAcount", "acount"),
+      "22:13: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "NammeAuditor", "namme"),
+      "25:10: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "LineRecrd", "recrd"),
+    };
+
+    verify(checkConfig, getPath("InputIdentifierSpellingPascalCase.java"), expected);
   }
 }

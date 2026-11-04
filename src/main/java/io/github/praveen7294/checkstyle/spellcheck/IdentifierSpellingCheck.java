@@ -77,6 +77,9 @@ public class IdentifierSpellingCheck extends AbstractCheck {
   @Override
   public int[] getDefaultTokens() {
     return new int[] {
+      TokenTypes.CLASS_DEF,
+      TokenTypes.INTERFACE_DEF,
+      TokenTypes.RECORD_DEF,
       TokenTypes.VARIABLE_DEF,
       TokenTypes.METHOD_DEF,
       TokenTypes.PARAMETER_DEF,
