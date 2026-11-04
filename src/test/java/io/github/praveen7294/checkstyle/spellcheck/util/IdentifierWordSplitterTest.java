@@ -73,4 +73,30 @@ public class IdentifierWordSplitterTest {
     assertEquals(List.of("line", "number"),
       IdentifierWordSplitter.split("LineNumber"));
   }
+
+  @Test
+  public void testUpperSnakeCaseIdentifiers() {
+    assertEquals(List.of("max", "buffer", "size"),
+      IdentifierWordSplitter.split("MAX_BUFFER_SIZE"));
+    assertEquals(List.of("default", "timeout"),
+      IdentifierWordSplitter.split("DEFAULT_TIMEOUT"));
+    assertEquals(List.of("timeout"),
+      IdentifierWordSplitter.split("TIMEOUT"));
+    assertEquals(List.of("internal", "id"),
+      IdentifierWordSplitter.split("_INTERNAL_ID_"));
+    assertEquals(List.of("key"),
+      IdentifierWordSplitter.split("__KEY__"));
+    assertTrue(IdentifierWordSplitter.split("_").isEmpty());
+    assertTrue(IdentifierWordSplitter.split("___").isEmpty());
+  }
+
+  @Test
+  public void testMixedSnakeAndCamelCase() {
+    assertEquals(List.of("user", "name"),
+      IdentifierWordSplitter.split("user_name"));
+    assertEquals(List.of("user", "account", "name"),
+      IdentifierWordSplitter.split("user_accountName"));
+    assertEquals(List.of("default", "user", "timeout"),
+      IdentifierWordSplitter.split("DEFAULT_userTimeout"));
+  }
 }
