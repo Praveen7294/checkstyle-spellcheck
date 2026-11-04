@@ -46,6 +46,9 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
       TokenTypes.RECORD_DEF,
       TokenTypes.ENUM_DEF,
       TokenTypes.ENUM_CONSTANT_DEF,
+      TokenTypes.ANNOTATION_DEF,
+      TokenTypes.ANNOTATION_FIELD_DEF,
+      TokenTypes.RECORD_COMPONENT_DEF,
       TokenTypes.VARIABLE_DEF,
       TokenTypes.METHOD_DEF,
       TokenTypes.PARAMETER_DEF,
@@ -140,5 +143,23 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
     };
 
     verify(checkConfig, getPath("InputIdentifierSpellingNumbers.java"), expected);
+  }
+
+  @Test
+  public void testAnnotationsAndRecordComponents() throws Exception {
+    final DefaultConfiguration checkConfig = createModuleConfig(IdentifierSpellingCheck.class);
+    checkConfig.addProperty("dictionaryFile", DIC_PATH);
+    checkConfig.addProperty("affixFile", AFF_PATH);
+    checkConfig.addProperty("whitelist", WHITELIST_PATH);
+
+    final String[] expected = {
+      "16:14: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "ServviceAuditor", "servvice"),
+      "17:12: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "fileePath", "filee"),
+      "19:9: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "retryyCount", "retryy"),
+      "27:31: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "userNamme", "namme"),
+      "27:46: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "userAgge", "agge"),
+    };
+
+    verify(checkConfig, getPath("InputIdentifierSpellingAnnotationsAndRecords.java"), expected);
   }
 }
