@@ -16,9 +16,14 @@ public final class IdentifierWordSplitter {
   private static final Pattern SNAKE_CASE_PATTERN = Pattern.compile("_+");
 
   /**
+   * Pattern to split tokens by digits.
+   */
+  private static final Pattern DIGIT_PATTERN = Pattern.compile("\\d+");
+
+  /**
    * Pattern to split camelCase and PascalCase boundaries (lowercase followed by uppercase).
    */
-  private static final Pattern CAMEL_CASE_PATTERN =
+  private static final Pattern CAMEL_OR_PASCAL_CASE_PATTERN =
       Pattern.compile("(?<=[a-z])(?=[A-Z])");
 
   /**
@@ -45,8 +50,9 @@ public final class IdentifierWordSplitter {
       return List.of();
     }
     return SNAKE_CASE_PATTERN.splitAsStream(identifier)
+      .flatMap(DIGIT_PATTERN::splitAsStream)
       .filter(Predicate.not(String::isEmpty))
-      .flatMap(CAMEL_CASE_PATTERN::splitAsStream)
+      .flatMap(CAMEL_OR_PASCAL_CASE_PATTERN::splitAsStream)
       .flatMap(ACRONYM_PATTERN::splitAsStream)
       .map(word -> word.toLowerCase(Locale.ROOT))
       .toList();

@@ -124,4 +124,21 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
 
     verify(checkConfig, getPath("InputIdentifierSpellingAcronyms.java"), expected);
   }
+
+  @Test
+  public void testIdentifiersWithDigits() throws Exception {
+    final DefaultConfiguration checkConfig = createModuleConfig(IdentifierSpellingCheck.class);
+    checkConfig.addProperty("dictionaryFile", DIC_PATH);
+    checkConfig.addProperty("affixFile", AFF_PATH);
+    checkConfig.addProperty("whitelist", WHITELIST_PATH);
+
+    final String[] expected = {
+      "16:18: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "user1Namme", "namme"),
+      "17:15: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "maxxRetry3Count", "maxx"),
+      "19:15: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "processSha256Hashe", "hashe"),
+      "19:41: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "paramm1", "paramm"),
+    };
+
+    verify(checkConfig, getPath("InputIdentifierSpellingNumbers.java"), expected);
+  }
 }
