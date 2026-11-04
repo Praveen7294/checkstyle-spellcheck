@@ -80,6 +80,8 @@ public class IdentifierSpellingCheck extends AbstractCheck {
       TokenTypes.CLASS_DEF,
       TokenTypes.INTERFACE_DEF,
       TokenTypes.RECORD_DEF,
+      TokenTypes.ENUM_DEF,
+      TokenTypes.ENUM_CONSTANT_DEF,
       TokenTypes.VARIABLE_DEF,
       TokenTypes.METHOD_DEF,
       TokenTypes.PARAMETER_DEF,

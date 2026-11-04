@@ -44,6 +44,8 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
       TokenTypes.CLASS_DEF,
       TokenTypes.INTERFACE_DEF,
       TokenTypes.RECORD_DEF,
+      TokenTypes.ENUM_DEF,
+      TokenTypes.ENUM_CONSTANT_DEF,
       TokenTypes.VARIABLE_DEF,
       TokenTypes.METHOD_DEF,
       TokenTypes.PARAMETER_DEF,
@@ -88,5 +90,22 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
     };
 
     verify(checkConfig, getPath("InputIdentifierSpellingPascalCase.java"), expected);
+  }
+
+  @Test
+  public void testConstantAndEnumIdentifiers() throws Exception {
+    final DefaultConfiguration checkConfig = createModuleConfig(IdentifierSpellingCheck.class);
+    checkConfig.addProperty("dictionaryFile", DIC_PATH);
+    checkConfig.addProperty("affixFile", AFF_PATH);
+    checkConfig.addProperty("whitelist", WHITELIST_PATH);
+
+    final String[] expected = {
+      "13:27: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "MAXX_BUFFER_SIZE", "maxx"),
+      "14:30: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "DEFAULLT_NAME", "defaullt"),
+      "25:8: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "Seazon", "seazon"),
+      "26:5: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "SPRINNG", "sprinng"),
+    };
+
+    verify(checkConfig, getPath("InputIdentifierSpellingConstantAndEnum.java"), expected);
   }
 }

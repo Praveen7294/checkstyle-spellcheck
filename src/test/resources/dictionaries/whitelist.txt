@@ -4,3 +4,4 @@
   DTO
 dao
 uuid
+enum
