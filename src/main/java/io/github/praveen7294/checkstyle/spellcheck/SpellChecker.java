@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -20,9 +21,18 @@ import org.apache.lucene.analysis.hunspell.Hunspell;
 import org.apache.lucene.analysis.hunspell.SortingStrategy;
 
 /**
- * Validates words against a user-configured Hunspell dictionary and an optional whitelist file.
+ * Validates words against a Hunspell dictionary and an optional whitelist file.
+ * Falls back to an embedded English dictionary if no custom dictionary is configured.
  */
 public final class SpellChecker {
+
+  /** Path to the embedded default English affix resource. */
+  private static final String DEFAULT_AFF_RESOURCE =
+      "/io/github/praveen7294/checkstyle/spellcheck/dictionaries/en_US.aff";
+
+  /** Path to the embedded default English dictionary resource. */
+  private static final String DEFAULT_DIC_RESOURCE =
+      "/io/github/praveen7294/checkstyle/spellcheck/dictionaries/en_US.dic";
 
   /** The underlying Hunspell dictionary and morphology engine. */
   private final Hunspell hunspell;
@@ -30,66 +40,115 @@ public final class SpellChecker {
   /** Set of approved custom words and acronyms normalized to lowercase. */
   private final Set<String> whitelist;
 
-  /**
-   * Internal thread-safe cache for validated words.
-   */
+  /** Internal thread-safe cache for validated words. */
   private final ConcurrentMap<String, Boolean> wordCache = new ConcurrentHashMap<>();
 
   /**
-   * Constructs a SpellChecker with the given dictionary, affix, and optional whitelist paths.
+   * Constructs a SpellChecker using the embedded default English dictionary and no whitelist.
    *
-   * @param dictionaryPath path to the Hunspell .dic file (mandatory)
-   * @param affixPath      path to the Hunspell .aff file (mandatory)
-   * @param whitelistPath  path to custom whitelist file (optional, can be null or empty)
-   * @throws IllegalArgumentException if mandatory files are missing or do not exist
+   * @throws IOException if an error occurs reading dictionary resources
+   * @throws ParseException if parsing the dictionary rules fails
+   */
+  public SpellChecker() throws IOException, ParseException {
+    this(null, null, null);
+  }
+
+  /**
+   * Constructs a SpellChecker using the embedded default English dictionary and a whitelist file.
+   *
+   * @param whitelistPath path to custom whitelist file (optional, can be null or empty)
+   * @throws IOException if an error occurs reading dictionary or whitelist files
+   * @throws ParseException if parsing the dictionary rules fails
+   */
+  public SpellChecker(String whitelistPath) throws IOException, ParseException {
+    this(null, null, whitelistPath);
+  }
+
+  /**
+   * Constructs a SpellChecker with optional custom dictionary, affix, and whitelist paths.
+   * If {@code dictionaryPath} and {@code affixPath} are null or blank, the embedded default
+   * English dictionary is used.
+   *
+   * @param dictionaryPath path to custom Hunspell .dic file (optional)
+   * @param affixPath path to custom Hunspell .aff file (optional)
+   * @param whitelistPath  path to custom whitelist file (optional)
+   * @throws IllegalArgumentException if only one custom dictionary file is provided or file missing
    * @throws IOException if an error occurs reading any file
    * @throws ParseException if the Hunspell dictionary files are malformed
    */
   public SpellChecker(String dictionaryPath, String affixPath, String whitelistPath)
       throws IOException, ParseException {
-    if (dictionaryPath == null || dictionaryPath.isBlank()) {
-      throw new IllegalArgumentException("dictionaryPath must not be null or blank");
-    }
-    if (affixPath == null || affixPath.isBlank()) {
-      throw new IllegalArgumentException("affixPath must not be null or blank");
-    }
-
     this.hunspell = loadHunspell(dictionaryPath, affixPath);
     this.whitelist = loadWhitelist(whitelistPath);
   }
 
   /**
-   * Loads and initializes the Hunspell engine from the given dictionary and affix files.
+   * Creates a Hunspell instance from the provided affix and dictionary input streams.
    *
-   * @param dicPath path to the Hunspell .dic file
-   * @param affPath path to the Hunspell .aff file
+   * @param affStream input stream for the Hunspell affix rules
+   * @param dicStream input stream for the Hunspell dictionary words
    * @return initialized {@link Hunspell} instance
-   * @throws IllegalArgumentException if either file does not exist or is not a regular file
-   * @throws IOException if an error occurs while reading the files
+   * @throws IOException if an I/O error occurs
+   * @throws ParseException if parsing the dictionary or affix rules fails
+   */
+  private static Hunspell createHunspell(InputStream affStream, InputStream dicStream)
+      throws IOException, ParseException {
+    final Dictionary dictionary = new Dictionary(
+        affStream,
+        List.of(dicStream),
+        true,
+        SortingStrategy.inMemory()
+    );
+    return new Hunspell(dictionary);
+  }
+
+  /**
+   * Loads and initializes the Hunspell engine from external files or embedded resources.
+   *
+   * @param dicPath optional path to external .dic file
+   * @param affPath optional path to external .aff file
+   * @return initialized {@link Hunspell} instance
+   * @throws IllegalArgumentException if only one dictionary file path is provided,
+   *     or if a specified file does not exist or is a directory
+   * @throws IOException if an error occurs reading the dictionary streams
    * @throws ParseException if parsing the dictionary or affix rules fails
    */
   private static Hunspell loadHunspell(String dicPath, String affPath)
       throws IOException, ParseException {
-    final File affFile = new File(affPath);
-    final File dicFile = new File(dicPath);
+    final boolean hasDic = dicPath != null && !dicPath.isBlank();
+    final boolean hasAff = affPath != null && !affPath.isBlank();
 
-    if (!affFile.exists() || !affFile.isFile()) {
-      throw new IllegalArgumentException("Affix file not found: " + affPath);
-    }
-    if (!dicFile.exists() || !dicFile.isFile()) {
-      throw new IllegalArgumentException("Dictionary file not found: " + dicPath);
+    if (hasDic != hasAff) {
+      throw new IllegalArgumentException(
+          "Both dictionaryPath and affixPath must be provided when using a custom dictionary");
     }
 
-    try (InputStream affStream = new BufferedInputStream(new FileInputStream(affFile));
-         InputStream dicStream = new BufferedInputStream(new FileInputStream(dicFile))) {
+    if (hasDic) {
+      final File affFile = new File(affPath);
+      final File dicFile = new File(dicPath);
 
-      final Dictionary dictionary = new Dictionary(
-          affStream,
-          List.of(dicStream),
-          true, // ignoreCase
-          SortingStrategy.inMemory()
-      );
-      return new Hunspell(dictionary);
+      if (!affFile.exists() || !affFile.isFile()) {
+        throw new IllegalArgumentException("File not found: " + affPath);
+      }
+      if (!dicFile.exists() || !dicFile.isFile()) {
+        throw new IllegalArgumentException("File not found: " + dicPath);
+      }
+
+      try (InputStream affStream = new BufferedInputStream(new FileInputStream(affFile));
+           InputStream dicStream = new BufferedInputStream(new FileInputStream(dicFile))) {
+        return createHunspell(affStream, dicStream);
+      }
+    }
+
+    try (InputStream affStream = new BufferedInputStream(
+        Objects.requireNonNull(
+        SpellChecker.class.getResourceAsStream(DEFAULT_AFF_RESOURCE),
+        "Default affix resource not found: " + DEFAULT_AFF_RESOURCE));
+         InputStream dicStream = new BufferedInputStream(
+             Objects.requireNonNull(
+             SpellChecker.class.getResourceAsStream(DEFAULT_DIC_RESOURCE),
+             "Default dictionary resource not found: " + DEFAULT_DIC_RESOURCE))) {
+      return createHunspell(affStream, dicStream);
     }
   }
 
