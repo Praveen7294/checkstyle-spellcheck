@@ -61,7 +61,9 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
   @Test
   public void testFinishLocalSetupFailsOnInvalidFiles() {
     final IdentifierSpellingCheck check = new IdentifierSpellingCheck();
-    // Missing mandatory dictionaryFile and affixFile
+    // Non-existent custom dictionary files should cause finishLocalSetup to fail
+    check.setDictionaryFile("non_existent.dic");
+    check.setAffixFile("non_existent.aff");
     assertThrows(IllegalStateException.class, check::finishLocalSetup);
   }
 
@@ -161,5 +163,19 @@ public class IdentifierSpellingCheckTest extends AbstractModuleTestSupport {
     };
 
     verify(checkConfig, getPath("InputIdentifierSpellingAnnotationsAndRecords.java"), expected);
+  }
+
+  @Test
+  public void testZeroConfigEmbeddedDictionary() throws Exception {
+    final DefaultConfiguration checkConfig = createModuleConfig(IdentifierSpellingCheck.class);
+    // Notice: NO dictionaryFile or affixFile configured! Only whitelist!
+    checkConfig.addProperty("whitelist", WHITELIST_PATH);
+
+    final String[] expected = {
+      "9:18: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "userAdress", "adress"),
+      "15:15: " + getCheckMessage(IdentifierSpellingCheck.MSG_KEY, "printNamme", "namme"),
+    };
+
+    verify(checkConfig, getPath("InputIdentifierSpellingCamelCase.java"), expected);
   }
 }

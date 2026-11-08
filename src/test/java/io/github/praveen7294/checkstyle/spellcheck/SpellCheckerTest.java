@@ -25,6 +25,28 @@ public class SpellCheckerTest {
   }
 
   @Test
+  public void testDefaultConstructor() throws Exception {
+    final SpellChecker checker = new SpellChecker();
+    assertTrue(checker.isCorrect("user"));
+    assertFalse(checker.isCorrect("adress"));
+  }
+
+  @Test
+  public void testSingleArgWhitelistConstructor() throws Exception {
+    final SpellChecker checker = new SpellChecker(WHITELIST_PATH);
+    assertTrue(checker.isCorrect("user"));
+    assertTrue(checker.isCorrect("dto"));
+    assertFalse(checker.isCorrect("adress"));
+  }
+
+  @Test
+  public void testBothDictionaryAndAffixPathsBlankFallsBackToDefault() throws Exception {
+    final SpellChecker checker = new SpellChecker("   ", "   ", null);
+    assertTrue(checker.isCorrect("user"));
+    assertFalse(checker.isCorrect("adress"));
+  }
+
+  @Test
   public void testValidDictionaryWords() {
     assertTrue(spellChecker.isCorrect("user"));
     assertTrue(spellChecker.isCorrect("name"));
