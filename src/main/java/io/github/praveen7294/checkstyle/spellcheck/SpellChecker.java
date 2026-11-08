@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import org.apache.lucene.analysis.hunspell.Dictionary;
 import org.apache.lucene.analysis.hunspell.Hunspell;
 import org.apache.lucene.analysis.hunspell.SortingStrategy;
@@ -29,14 +31,19 @@ public final class SpellChecker {
   private final Set<String> whitelist;
 
   /**
+   * Internal thread-safe cache for validated words.
+   */
+  private final ConcurrentMap<String, Boolean> wordCache = new ConcurrentHashMap<>();
+
+  /**
    * Constructs a SpellChecker with the given dictionary, affix, and optional whitelist paths.
    *
    * @param dictionaryPath path to the Hunspell .dic file (mandatory)
    * @param affixPath      path to the Hunspell .aff file (mandatory)
    * @param whitelistPath  path to custom whitelist file (optional, can be null or empty)
    * @throws IllegalArgumentException if mandatory files are missing or do not exist
-   * @throws IOException              if an error occurs reading any file
-   * @throws ParseException           if the Hunspell dictionary files are malformed
+   * @throws IOException if an error occurs reading any file
+   * @throws ParseException if the Hunspell dictionary files are malformed
    */
   public SpellChecker(String dictionaryPath, String affixPath, String whitelistPath)
       throws IOException, ParseException {
@@ -127,6 +134,12 @@ public final class SpellChecker {
       return true;
     }
     final String normalized = word.trim().toLowerCase(Locale.ROOT);
-    return whitelist.contains(normalized) || hunspell.spell(normalized);
+    final Boolean cached = wordCache.get(normalized);
+    if (cached != null) {
+      return cached;
+    }
+    final boolean valid = whitelist.contains(normalized) || hunspell.spell(normalized);
+    wordCache.put(normalized, valid);
+    return valid;
   }
 }

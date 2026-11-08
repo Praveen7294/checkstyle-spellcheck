@@ -131,4 +131,19 @@ public class SpellCheckerTest {
     assertThrows(IllegalArgumentException.class, () ->
       new SpellChecker(DIC_PATH, AFF_PATH, DIR_PATH));
   }
+
+  @Test
+  public void testWordCacheHits() {
+    // 1. Dictionary word: 1st call is a cache miss, 2nd call is a cache hit
+    assertTrue(spellChecker.isCorrect("user"));
+    assertTrue(spellChecker.isCorrect("user"));
+
+    // 2. Whitelist word: 1st call is a cache miss, 2nd call is a cache hit
+    assertTrue(spellChecker.isCorrect("dto"));
+    assertTrue(spellChecker.isCorrect("dto"));
+
+    // 3. Misspelled word: 1st call caches false, 2nd call hits cache with false
+    assertFalse(spellChecker.isCorrect("adress"));
+    assertFalse(spellChecker.isCorrect("adress"));
+  }
 }
