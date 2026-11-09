@@ -23,6 +23,8 @@ import org.apache.lucene.analysis.hunspell.SortingStrategy;
 /**
  * Validates words against a Hunspell dictionary and an optional whitelist file.
  * Falls back to an embedded English dictionary if no custom dictionary is configured.
+ *
+ * @since 0.1.0
  */
 public final class SpellChecker {
 

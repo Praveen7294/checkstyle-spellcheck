@@ -11,6 +11,8 @@ import java.util.List;
 
 /**
  * Checks the spelling of Java identifiers against a Hunspell dictionary and whitelist.
+ *
+ * @since 0.1.0
  */
 @StatelessCheck
 public class IdentifierSpellingCheck extends AbstractCheck {
