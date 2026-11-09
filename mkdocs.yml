@@ -1,0 +1,65 @@
+site_name: Checkstyle Spellcheck
+site_description: Fast, AST-aware spellchecking extension for Checkstyle powered by Apache Lucene Hunspell
+site_author: Praveen Kumar
+site_url: https://praveen7294.github.io/checkstyle-spellcheck/
+
+repo_name: Praveen7294/checkstyle-spellcheck
+repo_url: https://github.com/Praveen7294/checkstyle-spellcheck
+
+theme:
+  name: material
+  language: en
+  palette:
+    # Light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Configuration: configuration.md
+  - Tokens & Splitting: token-coverage.md
+  - Architecture: architecture.md
+  - Checkstyle Case Study: case-study.md
