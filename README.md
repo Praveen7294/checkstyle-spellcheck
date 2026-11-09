@@ -1,45 +1,100 @@
 # Checkstyle Spellcheck Extension
 
+<!-- Build & Quality Gate Badges -->
 [![Build & Verify](https://github.com/Praveen7294/checkstyle-spellcheck/actions/workflows/build-and-verify.yml/badge.svg)](https://github.com/Praveen7294/checkstyle-spellcheck/actions/workflows/build-and-verify.yml)
+[![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen.svg?logo=jacoco&logoColor=white)]()
+[![SpotBugs](https://img.shields.io/badge/SpotBugs-0_Bugs-brightgreen.svg)]()
+[![PMD](https://img.shields.io/badge/PMD-0_Violations-brightgreen.svg)]()
+[![Checkstyle Google Style](https://img.shields.io/badge/Checkstyle-Google_Style-blue.svg)](https://checkstyle.org/)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.praveen7294/checkstyle-spellcheck.svg)](https://central.sonatype.com/artifact/io.github.praveen7294/checkstyle-spellcheck)
+[![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?logo=openjdk&logoColor=white)]()
+[![Checkstyle Core](https://img.shields.io/badge/Checkstyle-10.18%2B%20%7C%2014.x-informational.svg)](https://checkstyle.org/)
+[![Lucene](https://img.shields.io/badge/Apache_Lucene-10.1.0-blue.svg?logo=apache&logoColor=white)](https://lucene.apache.org/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![JDK](https://img.shields.io/badge/JDK-21%2B-orange.svg)]()
 
-A high-performance [Checkstyle](https://checkstyle.org/) extension that validates the spelling of Java identifiers (
-classes, methods, variables, parameters, records, enums, annotations) using the **Apache Lucene Hunspell** morphology
-engine and a project-controlled whitelist.
+> A high-performance [Checkstyle](https://checkstyle.org/) extension module that validates the spelling of Java
+identifiers (classes, methods, variables, parameters, record components, enum constants, annotations) powered by
+the [Apache Lucene](https://lucene.apache.org/) Hunspell dictionary engine.
 
 Distributed as a standalone extension JAR to keep the core Checkstyle distribution lightweight while providing
-zero-config spelling audits out of the box.
+zero-configuration spelling audits out of the box.
 
----
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Build Tool Integration](#build-tool-integration)
+    - [Maven](#1-maven)
+    - [Gradle](#2-gradle)
+    - [Command Line (CLI)](#3-command-line-cli)
+- [Configuration](#configuration)
+    - [Zero-Config Default](#minimal--zero-config)
+    - [Project Whitelist](#standard-setup-with-project-whitelist)
+    - [Custom Dictionaries](#custom-dictionary-language-support)
+- [Properties Reference](#properties-reference)
+- [Whitelist Syntax](#whitelist-syntax)
+- [Building from Source](#building-from-source)
+- [Acknowledgements & Credits](#acknowledgements--credits)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Quick Start
+
+See `IdentifierSpellingCheck` in action in three simple files:
+
+```bash
+$ cat checkstyle.xml
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+          "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+          "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<module name="Checker">
+  <module name="TreeWalker">
+    <module name="IdentifierSpellingCheck"/>
+  </module>
+</module>
+
+$ cat UserService.java
+public class UserService {
+    private String userAdress;     // violation: 'adress'
+
+    public void printNamme() {     // violation: 'namme'
+        System.out.println(userAdress);
+    }
+}
+
+$ java -cp "checkstyle-all.jar;checkstyle-spellcheck-0.1.0.jar" \
+    com.puppycrawl.tools.checkstyle.Main -c checkstyle.xml UserService.java
+Starting audit...
+[WARN] UserService.java:2:20: Identifier 'userAdress' contains misspelled word 'adress'. [IdentifierSpellingCheck]
+[WARN] UserService.java:4:17: Identifier 'printNamme' contains misspelled word 'namme'. [IdentifierSpellingCheck]
+Audit done.
+Checkstyle ends with 2 warnings.
+```
 
 ## Features
 
-- **Zero-Configuration Default:** Bundles an embedded `en_US` dictionary (`en_US.aff` and `en_US.dic`). Works
-  immediately with zero external file setup.
-- **Comprehensive Identifier Coverage:** Audits all declaration AST tokens:
+- **Zero-Config Default:** Bundles an embedded `en_US` dictionary (`en_US.aff` and `en_US.dic`). Ready to use
+  immediately without downloading or configuring external dictionary files.
+- **Full AST Identifier Coverage:** Spellchecks every declaration identifier in Java source:
     - `CLASS_DEF`, `INTERFACE_DEF`, `RECORD_DEF`, `ENUM_DEF`
     - `METHOD_DEF`, `VARIABLE_DEF`, `PARAMETER_DEF`
     - `RECORD_COMPONENT_DEF`, `ANNOTATION_DEF`, `ANNOTATION_FIELD_DEF`, `ENUM_CONSTANT_DEF`
-- **Smart Identifier Splitting:** Accurately splits and parses:
-    - `camelCase` (`userAddress`, `printName`)
-    - `PascalCase` (`UserAccount`, `OrderService`)
+- **Lexical Token Splitting Pipeline:**
+    - `camelCase` & `PascalCase` (`userAddress`, `OrderService`)
     - `UPPER_SNAKE_CASE` (`MAX_BUFFER_SIZE`, `DEFAULT_TIMEOUT`)
     - Acronyms & Consecutive Uppercase (`HTTPServer`, `parseJSONResponse`, `XMLParser`)
-    - Embedded Numbers (`sha256Hash`, `param1`, `retry3Count`)
-- **Single Whitelist Control:** Project-specific whitelist for domain jargon, abbreviations, acronyms, and technical
-  terms.
-- **In-Memory Word Cache:** Thread-safe `ConcurrentHashMap` cache eliminates redundant dictionary lookups across large
-  multi-thousand file codebases.
+    - Embedded Digits (`sha256Hash`, `param1`, `retry3Count`)
+- **Single Whitelist Control:** Single, project-controlled whitelist for domain jargon, abbreviations, and technical
+  acronyms.
+- **In-Memory Word Cache:** Lock-free `ConcurrentHashMap` caches lookup results, ensuring linear $O(1)$ performance even
+  across codebases with millions of lines of code.
 
----
+## Build Tool Integration
 
-## Quickstart & Installation
+### 1. Maven
 
-### 1. Maven (`pom.xml`)
-
-Add `checkstyle-spellcheck` as a dependency inside the `maven-checkstyle-plugin`:
+Add `checkstyle-spellcheck` as a runtime dependency to your `maven-checkstyle-plugin`:
 
 ```xml
 <plugin>
@@ -47,7 +102,6 @@ Add `checkstyle-spellcheck` as a dependency inside the `maven-checkstyle-plugin`
   <artifactId>maven-checkstyle-plugin</artifactId>
   <version>3.6.0</version>
   <dependencies>
-    <!-- Add the spellcheck extension -->
     <dependency>
       <groupId>io.github.praveen7294</groupId>
       <artifactId>checkstyle-spellcheck</artifactId>
@@ -60,9 +114,9 @@ Add `checkstyle-spellcheck` as a dependency inside the `maven-checkstyle-plugin`
 </plugin>
 ```
 
-### 2. Gradle (`build.gradle`)
+### 2. Gradle
 
-Add `checkstyle-spellcheck` to the `checkstyle` configuration:
+Declare the extension under the `checkstyle` dependency configuration in `build.gradle`:
 
 ```groovy
 plugins {
@@ -74,56 +128,51 @@ dependencies {
 }
 ```
 
-### 3. Checkstyle Command Line (CLI)
+### 3. Command Line (CLI)
 
-Include the extension JAR on the Java classpath:
+Add both the Checkstyle all-in-one JAR and the spellcheck extension JAR to the Java classpath:
 
 ```bash
 java -cp "checkstyle-14.4.0-all.jar;checkstyle-spellcheck-0.1.0.jar" \
   com.puppycrawl.tools.checkstyle.Main -c checkstyle.xml src/
 ```
 
----
-
 ## Configuration
 
-### Minimal / Zero-Config Setup
+### Minimal / Zero-Config
 
-By default, the check uses the embedded English dictionary with no custom configuration needed:
+Uses the embedded English dictionary with zero external file requirements:
 
 ```xml
-<!DOCTYPE module PUBLIC
-    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
-    "https://checkstyle.org/dtds/configuration_1_3.dtd">
 <module name="Checker">
   <module name="TreeWalker">
-    <module name="io.github.praveen7294.checkstyle.spellcheck.IdentifierSpellingCheck"/>
+    <module name="IdentifierSpellingCheck"/>
   </module>
 </module>
 ```
 
 ### Standard Setup with Project Whitelist
 
-To approve project-specific acronyms, technical abbreviations, and domain terms:
+Approve technical abbreviations, framework acronyms, and domain-specific terms:
 
 ```xml
 <module name="Checker">
   <module name="TreeWalker">
-    <module name="io.github.praveen7294.checkstyle.spellcheck.IdentifierSpellingCheck">
+    <module name="IdentifierSpellingCheck">
       <property name="whitelist" value="config/whitelist.txt"/>
     </module>
   </module>
 </module>
 ```
 
-### Advanced Setup with Custom Dictionary
+### Custom Dictionary (Language Support)
 
-To use a language other than English (e.g., German, French, or medical/technical dictionaries):
+To audit non-English projects or specialized terminology (e.g., German, French, Medical):
 
 ```xml
 <module name="Checker">
   <module name="TreeWalker">
-    <module name="io.github.praveen7294.checkstyle.spellcheck.IdentifierSpellingCheck">
+    <module name="IdentifierSpellingCheck">
       <property name="dictionaryFile" value="config/dictionaries/de_DE.dic"/>
       <property name="affixFile" value="config/dictionaries/de_DE.aff"/>
       <property name="whitelist" value="config/whitelist.txt"/>
@@ -132,75 +181,84 @@ To use a language other than English (e.g., German, French, or medical/technical
 </module>
 ```
 
----
-
-## Configuration Properties
+## Properties Reference
 
 | Property | Description | Type | Default Value |
 | :--- | :--- | :---: | :---: |
-| `dictionaryFile` | Path to a custom Hunspell `.dic` file. If omitted or blank, falls back to the embedded default English dictionary. | `String` | Embedded `en_US.dic` |
-| `affixFile` | Path to a custom Hunspell `.aff` file. If omitted or blank, falls back to the embedded default English affix rules. | `String` | Embedded `en_US.aff` |
-| `whitelist` | Path to a project plaintext whitelist file. If omitted or blank, no whitelist is applied. | `String` | `null` |
-| `tokens` | Token types to audit. | `int[]` | All declaration tokens (`CLASS_DEF`, `METHOD_DEF`, `VARIABLE_DEF`, `PARAMETER_DEF`, etc.) |
+| `dictionaryFile` | Path to an external Hunspell `.dic` file. If omitted or blank, falls back to the embedded default English dictionary. | `String` | Embedded `en_US.dic` |
+| `affixFile` | Path to an external Hunspell `.aff` file. If omitted or blank, falls back to the embedded default English affix rules. | `String` | Embedded `en_US.aff` |
+| `whitelist` | Path to a project plaintext whitelist file. If omitted or blank, no custom whitelist is applied. | `String` | `null` |
+| `tokens` | Tokens to audit. Defaults to all identifier declaration tokens. | `int[]` | `CLASS_DEF`, `INTERFACE_DEF`, `RECORD_DEF`, `ENUM_DEF`, `ENUM_CONSTANT_DEF`, `ANNOTATION_DEF`, `ANNOTATION_FIELD_DEF`, `RECORD_COMPONENT_DEF`, `VARIABLE_DEF`, `METHOD_DEF`, `PARAMETER_DEF` |
 
----
+## Whitelist Syntax
 
-## Whitelist Format (`whitelist.txt`)
+The project whitelist is a plain UTF-8 text file (`whitelist.txt`):
 
-The whitelist is a plain UTF-8 text file. Each line contains an approved word or acronym:
-
-- **Case-insensitive:** Words in the whitelist match regardless of capitalization (`dto`, `DTO`, `Dto`).
-- **Comments supported:** Lines starting with `#` or `//` are ignored.
-- **Blank lines ignored:** Empty lines and whitespace are ignored.
-
-Example `config/whitelist.txt`:
+* **One word per line:** Trimmed and normalized automatically.
+* **Case-insensitive:** Terms match regardless of identifier casing (`dto`, `DTO`, `Dto`).
+* **Comments supported:** Lines beginning with `#` or `//` are treated as comments.
+* **Blank lines ignored:** Empty lines are safely skipped.
 
 ```text
-# Domain Acronyms
+# Domain & Architectural Terms
 dto
 dao
 uuid
 uri
 regex
 
-# Technical terms & libraries
+# Libraries & Tools
 hunspell
 checkstyle
 sha256
+lucene
 ```
-
----
-
-## Example Violation Output
-
-When an identifier contains a misspelled word, Checkstyle flags the exact line, column, identifier name, and misspelled
-sub-word:
-
-```text
-[WARN] src/main/java/com/example/UserService.java:14:18: Identifier 'userAdress' contains misspelled word 'adress'. [IdentifierSpellingCheck]
-[WARN] src/main/java/com/example/UserService.java:22:15: Identifier 'printNamme' contains misspelled word 'namme'. [IdentifierSpellingCheck]
-[WARN] src/main/java/com/example/OrderRecord.java:9:10: Identifier 'LineRecrd' contains misspelled word 'recrd'. [IdentifierSpellingCheck]
-```
-
----
 
 ## Building from Source
 
-Requirements:
+### Prerequisites
 
-- JDK 21+
-- Maven 3.9+ (or use the included `./mvnw`)
+- **JDK 21+**
+- **Maven 3.9+** (or use `./mvnw`)
 
 ```bash
 # Clone the repository
 git clone https://github.com/Praveen7294/checkstyle-spellcheck.git
 cd checkstyle-spellcheck
 
-# Build and run full test suite with 100% coverage verification
+# Compile, test, and verify quality gates
 ./mvnw clean verify
 ```
 
----
+## Acknowledgements & Credits
+
+This project stands on the shoulders of these industry-standard open-source projects:
+
+- **[Apache Lucene](https://lucene.apache.org/):**
+  Morphological analysis, affix rule processing, and dictionary lookup are powered
+  by [Apache Lucene's Hunspell implementation](https://lucene.apache.org/core/10_1_0/analysis/common/org/apache/lucene/analysis/hunspell/package-summary.html) (
+  `org.apache.lucene:lucene-analysis-common`), licensed under
+  the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+- **[Checkstyle](https://checkstyle.org/):**
+  The AST parsing infrastructure, token traversal engine, and modular static-analysis framework are built
+  upon [Checkstyle](https://checkstyle.org/) (`com.puppycrawl.tools:checkstyle`), licensed under
+  the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
+- **[Hunspell](https://hunspell.github.io/):**
+  The dictionary format and morphological algorithms originate from the [Hunspell](https://hunspell.github.io/)
+  spellchecker project used in LibreOffice, OpenOffice, and modern browsers.
+
+## Contributing
+
+Contributions, bug reports, and suggestions are welcome!
+
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/amazing-feature`).
+3. Ensure all tests and static analysis checks pass with **100% coverage**:
+   ```bash
+   ./mvnw clean verify
+   ```
+4. Commit your changes following [Checkstyle commit conventions](https://checkstyle.org/contributing.html).
+5. Open a Pull Request.
 
 ## License
 
