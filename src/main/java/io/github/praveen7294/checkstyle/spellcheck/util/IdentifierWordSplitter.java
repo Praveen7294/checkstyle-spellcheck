@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
 
 /**
  * Utility class to split Java identifiers into individual normalized words.
+ *
+ * @since 0.1.0
  */
 public final class IdentifierWordSplitter {
 
