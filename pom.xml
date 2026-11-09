@@ -6,7 +6,7 @@
 
   <groupId>io.github.praveen7294</groupId>
   <artifactId>checkstyle-spellcheck</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
   <packaging>jar</packaging>
 
   <name>Checkstyle Spellcheck Extension</name>
